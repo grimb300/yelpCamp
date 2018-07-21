@@ -173,28 +173,50 @@ app.post('/campgrounds/:id/comments', function(req,res) {
 // REGISTER
 app.get('/register', function(req, res) {
     // render the new user form
-    res.send('CREATE NEW USER');
+    res.render('register');
 });
 app.post('/register', function(req, res) {
-    // add new user to the database and redirect to the index route
-    res.send('NEW USER CREATED');
+    User.register(new User({ username: req.body.username }), req.body.password, function(err, user) {
+        if(err) {
+            console.log(err);
+            res.render('register');
+        } else {
+            passport.authenticate('local')(req, res, function() {
+                res.redirect('/secret');
+            });
+        }
+    });
 });
 
 // LOGIN
 app.get('/login', function(req, res) {
     // render the login form
-    res.send('LOGIN EXISTING USER');
+    res.render('login');
 });
-app.post('/login', function(req, res) {
-    // authorize user and redirect to the index route
-    res.send('USER LOGGED IN');
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/secret',
+    failureRedirect: '/login'
+}), function(req, res) {
 });
 
 // LOGOUT
 app.get('/logout', function(req, res) {
     // logout and redirect to the root route
+    req.logout();
     res.redirect('/');
 });
+
+// Verify that user is logged in and render the secret if successful
+app.get('/secret', isLoggedIn, function(req, res) {
+    res.render('secret');
+});
+// middleware to check login status
+function isLoggedIn(req, res, next) {
+    if(req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/login');
+}
 
 // Start the server
 app.listen(3000, () => console.log('App listening on port 3000'));
