@@ -4,12 +4,15 @@ var router = express.Router({ mergeParams: true });
 var Campground = require('../models/campground'),
     Comment    = require('../models/comment');
 
-// RESTful ROUTES comments
-// name    url                                 verb     desc
+// RESTful ROUTES comments (common url base is "/campgrounds/:id/comments")
+// name    url               verb     desc
 // ------------------------------------------------------------------------------------
-// NEW     /campgrounds/:id/comments/new       GET      Display form to create new comment
-// CREATE  /campgrounds/:id/comments           POST     Add comment to DB, associate it with the campground,
-//                                                      and redirect somewhere
+// NEW     /new              GET      Display form to create new comment
+// CREATE  /                 POST     Add comment to DB, associate it with the campground,
+//                                    and redirect somewhere
+// EDIT    /:commentid/edit  GET      Display edit form for one comment
+// UPDATE  /:commentid       PUT      Update one comment and redirect somewhere
+// DESTROY /:commentid       DELETE   Delete one comment and redirect somethere
 
 // Since this module is called with "/campgrounds/:id/comments", we don't nee to use that in the route
 // NEW comment
@@ -60,12 +63,110 @@ router.post('/', isLoggedIn, function(req,res) {
     });
 });
 
+// EDIT comment
+router.get('/:commentid/edit', isCommentOwner, function(req,res) {
+    // This seems like it is overkill, it would be better if the comment
+    // record had the information about the campground it was associated with
+
+    // Find the campground
+    Campground.findById(req.params.id, function(err, foundCampground) {
+        // Find the comment
+        Comment.findById(req.params.commentid, function(err, foundComment) {
+            // Colt claims we don't need to check the err here because the middleware
+            // already does it.
+            // I'm not sure I agree because it would be more defensive to check again.
+            res.render('comments/edit', { campground: foundCampground,
+                                          comment: foundComment });
+        });
+    });
+    
+});
+
+// UPDATE comment
+router.put('/:commentid', isCommentOwner, function(req, res) {
+    // console.log("running POST /campgrounds");
+
+    // Get the data from the request
+    // var editedComment = req.body.comment;
+    // editedComment.author = {
+    //     id: req.user.id,
+    //     username: req.user.username
+    // };
+
+    // Update it in the database
+    Comment.findByIdAndUpdate( req.params.commentid, req.body.comment, function(err, comment) {
+        // Colt claims we don't need to check the err here because the middleware
+        // already does it.
+        // I'm not sure I agree because it would be more defensive to check again.
+
+        // Redirect to the campground listing
+        res.redirect('/campgrounds/'+req.params.id);
+    });
+});
+
+// DESTROY comment
+router.delete('/:commentid', isCommentOwner, function(req, res) {
+    // Find the campground by its id
+    Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground) {
+        if(err) {
+            console.log(err);
+            res.render('back');
+        } else {
+            console.log("Campground before");
+            console.log(foundCampground);
+            // Find the comment by its id and remove  it
+            Comment.findByIdAndRemove(req.params.commentid, function(err) {
+                if(err) {
+                    console.log(err);
+                    res.redirect('back');
+                } else {
+                    res.redirect('/campgrounds/'+req.params.id);
+                }
+            });
+
+            // Do I need to remove the reference in the comments array?
+            console.log("Campground after");
+            foundCampground.populate('comments');
+            console.log(foundCampground);
+        }
+    });
+});
+
 // middleware to check login status
 function isLoggedIn(req, res, next) {
     if(req.isAuthenticated()) {
         return next();
     }
     res.redirect('/login');
+}
+
+// middleware to check ownership
+function isCommentOwner(req, res, next) {
+    // Is user logged in?
+    if(req.isAuthenticated()) {
+        // If so, find the comment
+        Comment.findById(req.params.commentid, function(err, foundComment) {
+            if(err) {
+                // If error, go back
+                console.log(err);
+                res.redirect("back");
+            } else {
+                // Does user own the comment?
+                if(foundComment.author.id.equals(req.user._id)) {
+                    // If so, execute the next thing
+                    next();
+                } else {
+                    // If not, go back
+                    console.log('NOT OWNER, GO BACK!');
+                    res.redirect('back');
+                }
+            }
+        });
+    } else {
+        // If not, go back
+        console.log('NOT LOGGED IN, GO BACK!');
+        res.redirect('back');
+    }
 }
 
 module.exports = router;

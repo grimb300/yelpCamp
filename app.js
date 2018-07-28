@@ -5,7 +5,8 @@ var express               = require('express'),
     bodyParser            = require('body-parser'),
     LocalStrategy         = require('passport-local'),
     passportLocalMongoose = require('passport-local-mongoose'),
-    expressSession        = require('express-session');
+    expressSession        = require('express-session'),
+    methodOverride        = require('method-override');
 
 // Require the routes
 var campgroundRoutes = require('./routes/campgrounds'),
@@ -39,6 +40,9 @@ app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+// Method override, so we can use PUT and DELETE methods
+app.use(methodOverride("_method"));
 
 // Seed the db
 // var seedDB = require("./seeds");
