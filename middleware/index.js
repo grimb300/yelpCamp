@@ -10,6 +10,7 @@ middlewareObj.isLoggedIn = function(req, res, next) {
     if(req.isAuthenticated()) {
         return next();
     }
+    req.flash('error', 'You must be logged in to perform that action!')
     res.redirect('/login');
 };
 
@@ -21,7 +22,7 @@ middlewareObj.isCampgroundOwner = function(req, res, next) {
         Campground.findById(req.params.id, function(err, foundCampground) {
             if(err) {
                 // If error, go back
-                console.log(err);
+                req.flash('error', 'Error accessing campgroundId: '+req.params.id);
                 res.redirect("back");
             } else {
                 // Does user own the campground?
@@ -30,15 +31,15 @@ middlewareObj.isCampgroundOwner = function(req, res, next) {
                     next();
                 } else {
                     // If not, go back
-                    console.log('NOT OWNER, GO BACK!');
+                    req.flash('error', 'You do not have permission to perform that action!');
                     res.redirect('back');
                 }
             }
         });
     } else {
-        // If not, go back
-        console.log('NOT LOGGED IN, GO BACK!');
-        res.redirect('back');
+        // If not, go to the login page
+        req.flash('error', 'You must be logged in to perform that action!')
+        res.redirect('/login');
     }
 };
 
@@ -50,7 +51,7 @@ middlewareObj.isCommentOwner = function(req, res, next) {
         Comment.findById(req.params.commentid, function(err, foundComment) {
             if(err) {
                 // If error, go back
-                console.log(err);
+                req.flash('error', 'Error accessing commentId: '+req.params.commentid);
                 res.redirect("back");
             } else {
                 // Does user own the comment?
@@ -59,22 +60,23 @@ middlewareObj.isCommentOwner = function(req, res, next) {
                     next();
                 } else {
                     // If not, go back
-                    console.log('NOT OWNER, GO BACK!');
+                    req.flash('error', 'You do not have permission to perform that action!');
                     res.redirect('back');
                 }
             }
         });
     } else {
-        // If not, go back
-        console.log('NOT LOGGED IN, GO BACK!');
-        res.redirect('back');
+        // If not, go to the login page
+        req.flash('error', 'You must be logged in to perform that action!')
+        res.redirect('/login');
     }
 };
 
-// Pass user info from all requests to all responses
-middlewareObj.userInfoPassthrough = function(req, res, next) {
-    // console.log("copying req.user to res.locals.currentUser");
+// Pass info from all requests to all responses
+middlewareObj.reqResPassthrough = function(req, res, next) {
     res.locals.currentUser = req.user;
+    res.locals.errorMsg = req.flash('error');
+    res.locals.successMsg = req.flash('success');
     next();
 };
 

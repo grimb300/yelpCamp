@@ -1,5 +1,6 @@
-var express =  require('express'),
-    passport = require('passport');
+var express    =  require('express'),
+    passport   = require('passport'),
+    middleware = require('../middleware');
 var router = express.Router();
 var User = require('../models/user');
 
@@ -23,11 +24,12 @@ router.post('/register', function(req, res) {
     // console.log("running POST /register");
     User.register(new User({ username: req.body.username }), req.body.password, function(err, user) {
         if(err) {
-            console.log(err);
-            res.render('register');
+            req.flash('error', err.message);
+            res.redirect('/register');
         } else {
             passport.authenticate('local')(req, res, function() {
-                res.redirect('/camgrounds');
+                req.flash('success', 'Welcome to YelpCamp '+req.body.username+'!');
+                res.redirect('/campgrounds');
             });
         }
     });
@@ -41,7 +43,9 @@ router.get('/login', function(req, res) {
 });
 router.post('/login', passport.authenticate('local', {
     successRedirect: '/campgrounds',
-    failureRedirect: '/login'
+    successFlash: 'Successfully logged in!',
+    failureRedirect: '/login',
+    failureFlash: true
 }), function(req, res) {
     // console.log("running POST /login (do not expect to see this)");
 });
@@ -51,11 +55,12 @@ router.get('/logout', function(req, res) {
     // console.log("running GET /logout");
     // logout and redirect to the root route
     req.logout();
+    req.flash('success', 'Successfully logged out, goodbye!')
     res.redirect('/');
 });
 
 // Verify that user is logged in and render the secret if successful
-router.get('/secret', isLoggedIn, function(req, res) {
+router.get('/secret', middleware.isLoggedIn, function(req, res) {
     // console.log("running GET /secret");
     res.render('secret');
 });

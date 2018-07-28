@@ -21,8 +21,20 @@
               <li><a href="#">Hi, <%= currentUser.username %></a></li>
               <li><a href="/logout">Logout</a></li>
             <% } %>
-            <!-- <li><a href="/secret">Test</a></li> -->
           </ul>
         </div>
       </div>
     </nav>
+
+    <div class='container'>
+      <% if(errorMsg && errorMsg.length > 0) { %>
+          <div class='alert alert-danger' role='alert'>
+            <%= errorMsg %>
+          </div>
+      <% } %>
+      <% if(successMsg && successMsg.length > 0) { %>
+        <div class='alert alert-success' role='alert'>
+          <%= successMsg %>
+        </div>
+      <% } %>
+    </div>

@@ -7,7 +7,8 @@ var express               = require('express'),
     passportLocalMongoose = require('passport-local-mongoose'),
     expressSession        = require('express-session'),
     methodOverride        = require('method-override'),
-    middleware            = require('./middleware');
+    middleware            = require('./middleware'),
+    flash                 = require('connect-flash');
 
 // Require the routes
 var campgroundRoutes = require('./routes/campgrounds'),
@@ -45,18 +46,16 @@ passport.deserializeUser(User.deserializeUser());
 // Method override, so we can use PUT and DELETE methods
 app.use(methodOverride("_method"));
 
+// Flash module
+app.use(flash());
+
 // Seed the db
 // var seedDB = require("./seeds");
 // seedDB();
 
-// Middleware to pass the current user to all responses
+// Middleware to pass info from the request to the response
 // Another strange dependency, this must be done before the routes setup below
-app.use(middleware.userInfoPassthrough);
-// app.use(function(req, res, next) {
-//     // console.log("copying req.user to res.locals.currentUser");
-//     res.locals.currentUser = req.user;
-//     next();
-// })
+app.use(middleware.reqResPassthrough);
 
 // routes setup
 // Another strange dependency, this must be done after the copying of user info above

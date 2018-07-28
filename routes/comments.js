@@ -21,7 +21,7 @@ router.get('/new', middleware.isLoggedIn, function(req,res) {
     // console.log("running GET /campgrounds/:id/comments/new");
     Campground.findById(req.params.id, function(err, foundCampground) {
         if(err) {
-            console.log(err);
+            req.flash('error', 'Error accessing campgroundId: '+req.params.id);
             res.redirect("/campgrounds");
         } else {
             res.render('comments/new', { campground: foundCampground });
@@ -35,13 +35,13 @@ router.post('/', middleware.isLoggedIn, function(req,res) {
     // Lookup campground using id
     Campground.findById(req.params.id, function(err, foundCampground) {
         if(err) {
-            console.log(err);
+            req.flash('error', 'Error accessing campgroundId: '+req.params.id);
             res.redirect("/campgrounds");
         } else {
             // creat new comment
             Comment.create(req.body.comment, function(err, newComment) {
                 if(err) {
-                    console.log(err);
+                    req.flash('error', 'Error creating comment');
                     res.redirect("/campgrounds");
                 } else {
                     // connect comment to campground, adding username and id, must save after addition
@@ -51,10 +51,11 @@ router.post('/', middleware.isLoggedIn, function(req,res) {
                     foundCampground.comments.push(newComment);
                     foundCampground.save(function(err, updatedCampground) {
                         if(err) {
-                            console.log(err);
+                            req.flash('error', 'Error creating comment');
                             res.redirect("/campgrounds");
                         } else {
                             // redirect to campground show page
+                            req.flash('success', 'Successfully created comment');
                             res.redirect("/campgrounds/"+req.params.id);
                         }
                     });
@@ -101,6 +102,7 @@ router.put('/:commentid', middleware.isCommentOwner, function(req, res) {
         // I'm not sure I agree because it would be more defensive to check again.
 
         // Redirect to the campground listing
+        req.flash('success', 'Successfully updated comment');
         res.redirect('/campgrounds/'+req.params.id);
     });
 });
@@ -110,25 +112,21 @@ router.delete('/:commentid', middleware.isCommentOwner, function(req, res) {
     // Find the campground by its id
     Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground) {
         if(err) {
-            console.log(err);
-            res.render('back');
+            req.flash('error', 'Error accessing campgroundId: '+req.params.id);
+            res.redirect('back');
         } else {
-            console.log("Campground before");
-            console.log(foundCampground);
             // Find the comment by its id and remove  it
             Comment.findByIdAndRemove(req.params.commentid, function(err) {
                 if(err) {
-                    console.log(err);
+                    req.flash('error', 'Error accessing commentId: '+req.params.commentid);
                     res.redirect('back');
                 } else {
+                    req.flash('success', 'Successfully removed comment');
                     res.redirect('/campgrounds/'+req.params.id);
                 }
             });
 
             // Do I need to remove the reference in the comments array?
-            console.log("Campground after");
-            foundCampground.populate('comments');
-            console.log(foundCampground);
         }
     });
 });

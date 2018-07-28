@@ -22,7 +22,8 @@ router.get('/', function(req, res) {
     // Get all campgrounds out of the database
     Campground.find({}, function(err, campgrounds) {
         if(err) {
-            console.log(err);
+            // Seems that this may cause a loop, if you get one error you may always get an error
+            req.flash('error', 'Error accessing campgrounds!');
             res.redirect("/campgrounds");
         } else {
             res.render('campgrounds/index', { campgrounds: campgrounds });
@@ -49,10 +50,11 @@ router.post('/', middleware.isLoggedIn, function(req, res) {
     // Add it to the database
     Campground.create( newCampground, function(err, campground) {
         if(err) {
-            console.log(err);
+            req.flash('error', 'Error creating new campground!');
             res.redirect("back");
         } else {
             // Redirect to the campground listing
+            req.flash('success', campground.name+' created!');
             res.redirect('/campgrounds');
         }
     });
@@ -63,7 +65,7 @@ router.get('/:id', function(req,res) {
     // console.log("running GET /campgrounds/:id");
     Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground) {
         if(err) {
-            console.log(err);
+            req.flash('error', 'Error accessing campgroundId: '+req.params.id);
             res.redirect("/campgrounds");
         } else {
             res.render('campgrounds/show', { campground: foundCampground });
@@ -99,6 +101,7 @@ router.put('/:id', middleware.isCampgroundOwner, function(req, res) {
         // I'm not sure I agree because it would be more defensive to check again.
 
         // Redirect to the campground listing
+        req.flash('success', 'Campground '+campground.name+' successfully updated!');
         res.redirect('/campgrounds/'+req.params.id);
     });
 });
@@ -108,15 +111,15 @@ router.delete('/:id', middleware.isCampgroundOwner, function(req, res) {
     // Find the campground by its id
     Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground) {
         if(err) {
-            console.log(err);
-            res.render('back');
+            req.flash('error', 'Error accessing campgroundId: '+req.params.id);
+            res.redirect('back');
         } else {
             // Delete each comment
             foundCampground.comments.forEach(function(foundComment) {
                 console.log(foundComment);
                 Comment.findByIdAndRemove(foundComment._id, function(err) {
                         if(err) {
-                            console.log(err);
+                            req.flash('error', 'Error accessing commentId: '+foundComment._id);
                         }
                 });
             });
@@ -125,6 +128,7 @@ router.delete('/:id', middleware.isCampgroundOwner, function(req, res) {
             foundCampground.remove();
 
             // Then redirect to the campground list
+            req.flash('success', 'Successfully removed campground '+foundCampground.name);
             res.redirect('/campgrounds');
         }
     });
