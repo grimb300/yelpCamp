@@ -1,4 +1,5 @@
-var express = require('express');
+var express    = require('express'),
+    middleware = require('../middleware');
 var router = express.Router();
 var Campground = require('../models/campground'),
     Comment    = require('../models/comment');
@@ -30,13 +31,13 @@ router.get('/', function(req, res) {
 });
 
 // NEW campground
-router.get('/new', isLoggedIn, function(req,res) {
+router.get('/new', middleware.isLoggedIn, function(req,res) {
     // console.log("running GET /campgrounds/new");
     res.render('campgrounds/new');
 });
 
 // CREATE campground
-router.post('/', isLoggedIn, function(req, res) {
+router.post('/', middleware.isLoggedIn, function(req, res) {
     // console.log("running POST /campgrounds");
     // Get the data from the request
     var newCampground = req.body.campground;
@@ -71,7 +72,7 @@ router.get('/:id', function(req,res) {
 });
 
 // EDIT
-router.get('/:id/edit', isCampgroundOwner, function(req,res) {
+router.get('/:id/edit', middleware.isCampgroundOwner, function(req,res) {
     Campground.findById(req.params.id, function(err, foundCampground) {
         // Colt claims we don't need to check the err here because the middleware
         // already does it.
@@ -81,7 +82,7 @@ router.get('/:id/edit', isCampgroundOwner, function(req,res) {
 });
 
 // UPDATE  /campgrounds/:id       PUT      Update one campground and redirect somewhere
-router.put('/:id', isCampgroundOwner, function(req, res) {
+router.put('/:id', middleware.isCampgroundOwner, function(req, res) {
     // console.log("running POST /campgrounds");
 
     // Get the data from the request
@@ -103,7 +104,7 @@ router.put('/:id', isCampgroundOwner, function(req, res) {
 });
 
 // DESTROY
-router.delete('/:id', isCampgroundOwner, function(req, res) {
+router.delete('/:id', middleware.isCampgroundOwner, function(req, res) {
     // Find the campground by its id
     Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground) {
         if(err) {
@@ -128,42 +129,5 @@ router.delete('/:id', isCampgroundOwner, function(req, res) {
         }
     });
 });
-
-// middleware to check login status
-function isLoggedIn(req, res, next) {
-    if(req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/login');
-}
-
-// middleware to check ownership
-function isCampgroundOwner(req, res, next) {
-    // Is user logged in?
-    if(req.isAuthenticated()) {
-        // If so, find the campground
-        Campground.findById(req.params.id, function(err, foundCampground) {
-            if(err) {
-                // If error, go back
-                console.log(err);
-                res.redirect("back");
-            } else {
-                // Does user own the campground?
-                if(foundCampground.author.id.equals(req.user._id)) {
-                    // If so, execute the next thing
-                    next();
-                } else {
-                    // If not, go back
-                    console.log('NOT OWNER, GO BACK!');
-                    res.redirect('back');
-                }
-            }
-        });
-    } else {
-        // If not, go back
-        console.log('NOT LOGGED IN, GO BACK!');
-        res.redirect('back');
-    }
-}
 
 module.exports = router;

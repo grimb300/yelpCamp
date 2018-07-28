@@ -60,12 +60,4 @@ router.get('/secret', isLoggedIn, function(req, res) {
     res.render('secret');
 });
 
-// middleware to check login status
-function isLoggedIn(req, res, next) {
-    if(req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/login');
-}
-
 module.exports = router;

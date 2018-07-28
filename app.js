@@ -6,7 +6,8 @@ var express               = require('express'),
     LocalStrategy         = require('passport-local'),
     passportLocalMongoose = require('passport-local-mongoose'),
     expressSession        = require('express-session'),
-    methodOverride        = require('method-override');
+    methodOverride        = require('method-override'),
+    middleware            = require('./middleware');
 
 // Require the routes
 var campgroundRoutes = require('./routes/campgrounds'),
@@ -50,25 +51,18 @@ app.use(methodOverride("_method"));
 
 // Middleware to pass the current user to all responses
 // Another strange dependency, this must be done before the routes setup below
-app.use(function(req, res, next) {
-    // console.log("copying req.user to res.locals.currentUser");
-    res.locals.currentUser = req.user;
-    next();
-})
+app.use(middleware.userInfoPassthrough);
+// app.use(function(req, res, next) {
+//     // console.log("copying req.user to res.locals.currentUser");
+//     res.locals.currentUser = req.user;
+//     next();
+// })
 
 // routes setup
 // Another strange dependency, this must be done after the copying of user info above
 app.use("/campgrounds", campgroundRoutes);
 app.use("/campgrounds/:id/comments", commentRoutes);
 app.use("/", indexRoutes);
-
-// middleware to check login status
-function isLoggedIn(req, res, next) {
-    if(req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/login');
-}
 
 // Start the server
 app.listen(3000, () => console.log('App listening on port 3000'));
