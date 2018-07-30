@@ -20,7 +20,7 @@ var Campground = require('../models/campground'),
 router.get('/new', middleware.isLoggedIn, function(req,res) {
     // console.log("running GET /campgrounds/:id/comments/new");
     Campground.findById(req.params.id, function(err, foundCampground) {
-        if(err) {
+        if(err || !foundCampground) {
             req.flash('error', 'Error accessing campgroundId: '+req.params.id);
             res.redirect("/campgrounds");
         } else {
@@ -34,7 +34,7 @@ router.post('/', middleware.isLoggedIn, function(req,res) {
     // console.log("running POST /campgrounds/:id/comments/new");
     // Lookup campground using id
     Campground.findById(req.params.id, function(err, foundCampground) {
-        if(err) {
+        if(err || !foundCampground) {
             req.flash('error', 'Error accessing campgroundId: '+req.params.id);
             res.redirect("/campgrounds");
         } else {
@@ -72,14 +72,19 @@ router.get('/:commentid/edit', middleware.isCommentOwner, function(req,res) {
 
     // Find the campground
     Campground.findById(req.params.id, function(err, foundCampground) {
-        // Find the comment
-        Comment.findById(req.params.commentid, function(err, foundComment) {
-            // Colt claims we don't need to check the err here because the middleware
-            // already does it.
-            // I'm not sure I agree because it would be more defensive to check again.
-            res.render('comments/edit', { campground: foundCampground,
-                                          comment: foundComment });
-        });
+        if(err || !foundCampground) {
+            req.flash('error', 'Error accessing campgroundId: '+req.params.id);
+            res.redirect("/campgrounds");
+        } else {
+            // Find the comment
+            Comment.findById(req.params.commentid, function(err, foundComment) {
+                // Colt claims we don't need to check the err here because the middleware
+                // already does it.
+                // I'm not sure I agree because it would be more defensive to check again.
+                res.render('comments/edit', { campground: foundCampground,
+                                            comment: foundComment });
+            });
+        }
     });
     
 });
@@ -111,7 +116,7 @@ router.put('/:commentid', middleware.isCommentOwner, function(req, res) {
 router.delete('/:commentid', middleware.isCommentOwner, function(req, res) {
     // Find the campground by its id
     Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground) {
-        if(err) {
+        if(err || !foundCampground) {
             req.flash('error', 'Error accessing campgroundId: '+req.params.id);
             res.redirect('back');
         } else {

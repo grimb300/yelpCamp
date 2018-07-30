@@ -20,7 +20,7 @@ middlewareObj.isCampgroundOwner = function(req, res, next) {
     if(req.isAuthenticated()) {
         // If so, find the campground
         Campground.findById(req.params.id, function(err, foundCampground) {
-            if(err) {
+            if(err || !foundCampground) {
                 // If error, go back
                 req.flash('error', 'Error accessing campgroundId: '+req.params.id);
                 res.redirect("back");
@@ -49,7 +49,7 @@ middlewareObj.isCommentOwner = function(req, res, next) {
     if(req.isAuthenticated()) {
         // If so, find the comment
         Comment.findById(req.params.commentid, function(err, foundComment) {
-            if(err) {
+            if(err || !foundComment) {
                 // If error, go back
                 req.flash('error', 'Error accessing commentId: '+req.params.commentid);
                 res.redirect("back");

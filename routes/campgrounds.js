@@ -64,7 +64,7 @@ router.post('/', middleware.isLoggedIn, function(req, res) {
 router.get('/:id', function(req,res) {
     // console.log("running GET /campgrounds/:id");
     Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground) {
-        if(err) {
+        if(err || !foundCampground) {
             req.flash('error', 'Error accessing campgroundId: '+req.params.id);
             res.redirect("/campgrounds");
         } else {
@@ -110,7 +110,7 @@ router.put('/:id', middleware.isCampgroundOwner, function(req, res) {
 router.delete('/:id', middleware.isCampgroundOwner, function(req, res) {
     // Find the campground by its id
     Campground.findById(req.params.id).populate("comments").exec(function(err, foundCampground) {
-        if(err) {
+        if(err || !foundCampground) {
             req.flash('error', 'Error accessing campgroundId: '+req.params.id);
             res.redirect('back');
         } else {
