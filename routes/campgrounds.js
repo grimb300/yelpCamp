@@ -53,9 +53,9 @@ router.post('/', middleware.isLoggedIn, function(req, res) {
             req.flash('error', 'Error creating new campground!');
             res.redirect("back");
         } else {
-            // Redirect to the campground listing
+            // Redirect to the campground show page
             req.flash('success', campground.name+' created!');
-            res.redirect('/campgrounds');
+            res.redirect('/campgrounds/'+campground._id);
         }
     });
 });
