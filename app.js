@@ -1,5 +1,6 @@
 // Determine the http port we will be using
 const PORT = process.env.PORT || 3000;
+const DBURL = process.env.YELPCAMPDBURL || 'mongodb://localhost:27017/yelp_camp';
 
 // Require the packages
 var express               = require('express'),
@@ -24,9 +25,7 @@ var Campground = require('./models/campground'),
     User       = require('./models/user');
 
 // database setup
-// mongoose.connect('mongodb://localhost:27017/yelp_camp', { useNewUrlParser: true });
-mongoose.connect('mongodb://cdlyelpcamp:cXwlckYNp321@ds161001.mlab.com:61001/cdlyelpcamp', { useNewUrlParser: true });
-
+mongoose.connect(DBURL, { useNewUrlParser: true });
 
 // app setup
 var app = express();
