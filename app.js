@@ -1,3 +1,6 @@
+// Determine the http port we will be using
+const PORT = process.env.PORT || 3000;
+
 // Require the packages
 var express               = require('express'),
     mongoose              = require('mongoose'),
@@ -64,4 +67,4 @@ app.use("/campgrounds/:id/comments", commentRoutes);
 app.use("/", indexRoutes);
 
 // Start the server
-app.listen(3000, () => console.log('App listening on port 3000'));
+app.listen(PORT, () => console.log('App listening on port '+PORT));
