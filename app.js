@@ -24,7 +24,8 @@ var Campground = require('./models/campground'),
     User       = require('./models/user');
 
 // database setup
-mongoose.connect('mongodb://localhost:27017/yelp_camp', { useNewUrlParser: true });
+// mongoose.connect('mongodb://localhost:27017/yelp_camp', { useNewUrlParser: true });
+mongoose.connect('mongodb://cdlyelpcamp:cXwlckYNp321@ds161001.mlab.com:61001/cdlyelpcamp', { useNewUrlParser: true });
 
 
 // app setup
