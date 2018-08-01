@@ -12,3 +12,6 @@
 
 # Node dependency directories
 node_modules/
+
+# any directory called "secrets" for obvious reasons
+secrets/
